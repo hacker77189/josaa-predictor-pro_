@@ -10,7 +10,6 @@ const errorHandler = require('./middleware/errorHandler');
 dotenv.config();
 
 const app = express();
-
 const isServerless = process.env.VERCEL || process.env.NETLIFY;
 
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
@@ -33,14 +32,37 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 
-mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 20000,
-  connectTimeoutMS: 20000
-}).catch(err => console.error('MongoDB connection error:', err.message));
+let connectPromise = null;
+const getDb = () => {
+  if (mongoose.connection.readyState === 1) return Promise.resolve();
+  if (connectPromise) return connectPromise;
+  connectPromise = mongoose.connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 20000,
+    connectTimeoutMS: 20000
+  }).catch(err => {
+    connectPromise = null;
+    console.error('MongoDB connection error:', err.message);
+    throw err;
+  });
+  return connectPromise;
+};
+
+const mongoMiddleware = async (req, res, next) => {
+  const publicPaths = ['/api/health'];
+  const isPublic = publicPaths.some(p => req.path.startsWith(p));
+  try {
+    if (!isPublic) await getDb();
+  } catch {
+    return res.status(503).json({ success: false, error: 'Database unavailable' });
+  }
+  next();
+};
 
 mongoose.connection.on('error', err => console.error('MongoDB runtime error:', err.message));
-mongoose.connection.on('connected', () => console.log('MongoDB connected'));
+mongoose.connection.on('connected', () => { console.log('MongoDB connected'); connectPromise = null; });
+mongoose.connection.on('disconnected', () => { connectPromise = null; });
 
+app.use(mongoMiddleware);
 app.use('/api', require('./routes/apiRoutes'));
 app.use('/api/users', require('./routes/authRoutes'));
 
@@ -50,20 +72,19 @@ module.exports = app;
 
 if (require.main === module) {
   const PORT = process.env.PORT || 5000;
-  const server = app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  getDb().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   });
 
   const gracefulShutdown = (signal) => {
     console.log(`\n${signal} received. Shutting down gracefully...`);
-    server.close(() => {
-      mongoose.connection.close(false).then(() => {
-        console.log('MongoDB connection closed.');
-        process.exit(0);
-      });
+    mongoose.connection.close(false).then(() => {
+      console.log('MongoDB connection closed.');
+      process.exit(0);
     });
   };
-
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
