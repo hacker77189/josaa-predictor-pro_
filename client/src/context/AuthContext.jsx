@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         try {
           const res = await api.get('/users/me');
-          setUser(res.data.data);
+          setUser(res.data.user);
         } catch (err) {
           console.error(err);
           setToken(null);

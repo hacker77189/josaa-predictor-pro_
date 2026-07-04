@@ -13,9 +13,10 @@ exports.protect = async (req, res, next) => {
   }
 
   try {
-    // Verify token
-    // Using a hardcoded secret for demo purposes, normally in .env
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'josaasecret123');
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'JWT_SECRET not configured' });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id);
     next();
   } catch (err) {

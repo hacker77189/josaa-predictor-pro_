@@ -8,7 +8,9 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const { login, register } = useAuth();
@@ -16,9 +18,37 @@ const Auth = () => {
   const location = useLocation();
   const from = location.state?.from || '/';
 
+  const validate = () => {
+    const errors = {};
+
+    if (!isLogin) {
+      if (!name || name.trim().length < 2 || name.trim().length > 50) {
+        errors.name = 'Name must be between 2 and 50 characters';
+      }
+    }
+
+    if (!email || !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+      errors.email = 'Please provide a valid email address';
+    }
+
+    if (!password || password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    }
+
+    if (!isLogin && password !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!validate()) return;
+
     setLoading(true);
     try {
       if (isLogin) {
@@ -28,10 +58,24 @@ const Auth = () => {
       }
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || 'Authentication failed');
+      const data = err.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        const errs = {};
+        data.errors.forEach(e => { errs[e.field] = e.message; });
+        setFieldErrors(errs);
+      } else {
+        setError(data?.error || 'Authentication failed');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const switchMode = () => {
+    setIsLogin(!isLogin);
+    setError('');
+    setFieldErrors({});
+    setConfirmPassword('');
   };
 
   return (
@@ -54,11 +98,11 @@ const Auth = () => {
               <input 
                 type="text" 
                 value={name} 
-                onChange={e => setName(e.target.value)} 
-                required 
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary-500 outline-none transition-colors"
+                onChange={e => { setName(e.target.value); setFieldErrors(p => ({...p, name: undefined})); }}
+                className={`w-full bg-black/30 border ${fieldErrors.name ? 'border-red-500' : 'border-white/10'} rounded-lg p-3 text-white focus:border-primary-500 outline-none transition-colors`}
                 placeholder="John Doe"
               />
+              {fieldErrors.name && <p className="text-red-400 text-xs mt-1">{fieldErrors.name}</p>}
             </div>
           )}
           <div>
@@ -66,23 +110,36 @@ const Auth = () => {
             <input 
               type="email" 
               value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
-              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary-500 outline-none transition-colors"
+              onChange={e => { setEmail(e.target.value); setFieldErrors(p => ({...p, email: undefined})); }}
+              className={`w-full bg-black/30 border ${fieldErrors.email ? 'border-red-500' : 'border-white/10'} rounded-lg p-3 text-white focus:border-primary-500 outline-none transition-colors`}
               placeholder="you@example.com"
             />
+            {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-1">Password</label>
             <input 
               type="password" 
               value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              required 
-              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary-500 outline-none transition-colors"
+              onChange={e => { setPassword(e.target.value); setFieldErrors(p => ({...p, password: undefined})); }}
+              className={`w-full bg-black/30 border ${fieldErrors.password ? 'border-red-500' : 'border-white/10'} rounded-lg p-3 text-white focus:border-primary-500 outline-none transition-colors`}
               placeholder="••••••••"
             />
+            {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
           </div>
+          {!isLogin && (
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1">Confirm Password</label>
+              <input 
+                type="password" 
+                value={confirmPassword} 
+                onChange={e => { setConfirmPassword(e.target.value); setFieldErrors(p => ({...p, confirmPassword: undefined})); }}
+                className={`w-full bg-black/30 border ${fieldErrors.confirmPassword ? 'border-red-500' : 'border-white/10'} rounded-lg p-3 text-white focus:border-primary-500 outline-none transition-colors`}
+                placeholder="••••••••"
+              />
+              {fieldErrors.confirmPassword && <p className="text-red-400 text-xs mt-1">{fieldErrors.confirmPassword}</p>}
+            </div>
+          )}
           
           <button 
             type="submit" 
@@ -97,7 +154,7 @@ const Auth = () => {
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button 
             type="button"
-            onClick={() => setIsLogin(!isLogin)} 
+            onClick={switchMode} 
             className="text-primary-400 hover:text-white font-semibold transition-colors"
           >
             {isLogin ? 'Sign up' : 'Sign in'}

@@ -1,10 +1,11 @@
+const path = require('path');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const axios = require('axios');
 const csv = require('csv-parser');
 const { College, Cutoff, User } = require('../models');
 
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const CSV_NIT_URL = 'https://raw.githubusercontent.com/Quantum-Codes/JoSAA_2024/main/exported_data/csv/josaa24.csv';
 const CSV_IIT_URL = 'https://raw.githubusercontent.com/Quantum-Codes/JoSAA_2024/main/exported_data/csv/ORCR.csv';
