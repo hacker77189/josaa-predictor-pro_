@@ -16,29 +16,28 @@ if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
 
 const app = express();
 
-app.use(helmet());
-app.use(compression());
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+const isServerless = process.env.VERCEL || process.env.NETLIFY;
 
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',')
-  : ['http://localhost:5173', 'http://localhost:5000'];
+if (!isServerless) {
+  app.use(helmet());
+  app.use(compression());
+}
+
+if (!isServerless) {
+  app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+}
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',')
+    : ['http://localhost:5173', 'http://localhost:5000'],
   credentials: true
 }));
 
 app.use(express.json({ limit: '10kb' }));
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected successfully'))
+  .then(() => !isServerless && console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
 app.use('/api', require('./routes/apiRoutes'));
@@ -66,4 +65,5 @@ if (require.main === module) {
 
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+}
 }
