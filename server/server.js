@@ -34,34 +34,12 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 
 mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 25000,
-  connectTimeoutMS: 25000,
-  bufferTimeoutMS: 30000
+  serverSelectionTimeoutMS: 15000,
+  connectTimeoutMS: 15000
 }).catch(err => console.error('MongoDB connection error:', err.message));
 
 mongoose.connection.on('error', err => console.error('MongoDB runtime error:', err.message));
-mongoose.connection.on('connected', () => console.error('MongoDB connected'));
-
-const mongoReady = () => mongoose.connection.readyState === 1;
-const waitForMongo = () => {
-  if (mongoReady()) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('MongoDB connection timeout')), 30000);
-    mongoose.connection.once('connected', () => { clearTimeout(timeout); resolve(); });
-    mongoose.connection.once('error', (err) => { clearTimeout(timeout); reject(err); });
-  });
-};
-
-app.use(async (req, res, next) => {
-  if (!mongoReady()) {
-    try {
-      await waitForMongo();
-    } catch (err) {
-      return res.status(503).json({ success: false, error: 'Database unavailable', detail: err.message });
-    }
-  }
-  next();
-});
+mongoose.connection.on('connected', () => console.log('MongoDB connected'));
 
 app.use('/api', require('./routes/apiRoutes'));
 app.use('/api/users', require('./routes/authRoutes'));
