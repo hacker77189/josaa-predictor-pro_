@@ -134,11 +134,25 @@ router.get('/predict', async (req, res) => {
 });
 
 // GET /api/health
-router.get('/health', (req, res) => {
+router.get('/health', async (req, res) => {
+  const state = mongoose.connection.readyState;
+  let detail = null;
+  if (state !== 1) {
+    try {
+      await mongoose.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000
+      });
+      detail = 'reconnected on demand';
+    } catch (err) {
+      detail = err.message;
+    }
+  }
   res.json({
-    success: true,
+    success: state === 1 || mongoose.connection.readyState === 1,
     mongoState: mongoose.connection.readyState,
-    mongoStateLabel: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown'
+    mongoStateLabel: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown',
+    detail
   });
 });
 
