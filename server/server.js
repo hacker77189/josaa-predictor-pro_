@@ -34,8 +34,8 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 
 mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 15000,
-  connectTimeoutMS: 15000
+  serverSelectionTimeoutMS: 20000,
+  connectTimeoutMS: 20000
 }).catch(err => console.error('MongoDB connection error:', err.message));
 
 mongoose.connection.on('error', err => console.error('MongoDB runtime error:', err.message));
