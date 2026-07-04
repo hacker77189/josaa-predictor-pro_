@@ -36,9 +36,32 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => !isServerless && console.log('MongoDB connected successfully'))
-  .catch(err => console.error('MongoDB connection error:', err));
+let dbConnected = false;
+const connectDB = async () => {
+  if (dbConnected) return;
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000
+    });
+    dbConnected = true;
+    if (!isServerless) console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    throw err;
+  }
+};
+
+app.use(async (req, res, next) => {
+  if (!dbConnected) {
+    try {
+      await connectDB();
+    } catch {
+      return res.status(503).json({ success: false, error: 'Database connection unavailable' });
+    }
+  }
+  next();
+});
 
 app.use('/api', require('./routes/apiRoutes'));
 app.use('/api/users', require('./routes/authRoutes'));
