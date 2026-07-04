@@ -34,9 +34,12 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 
 mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 10000,
-  connectTimeoutMS: 10000
-}).catch(err => console.error('MongoDB connection error:', err));
+  serverSelectionTimeoutMS: 25000,
+  connectTimeoutMS: 25000
+}).catch(err => console.error('MongoDB connection error:', err.message));
+
+mongoose.connection.on('error', err => console.error('MongoDB runtime error:', err.message));
+mongoose.connection.on('connected', () => console.error('MongoDB connected'));
 
 app.use('/api', require('./routes/apiRoutes'));
 app.use('/api/users', require('./routes/authRoutes'));

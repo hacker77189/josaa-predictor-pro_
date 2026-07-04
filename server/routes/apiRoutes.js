@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const { College, Cutoff } = require('../models');
 
@@ -130,6 +131,15 @@ router.get('/predict', async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'Server error', detail: error.message });
   }
+});
+
+// GET /api/health
+router.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    mongoState: mongoose.connection.readyState,
+    mongoStateLabel: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown'
+  });
 });
 
 // GET /api/filters (To populate dropdowns on frontend)
