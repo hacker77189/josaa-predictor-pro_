@@ -9,21 +9,18 @@ const errorHandler = require('./middleware/errorHandler');
 
 dotenv.config();
 
-if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
-  console.error('Missing required environment variables: MONGO_URI and JWT_SECRET must be set');
-  process.exit(1);
-}
-
 const app = express();
 
 const isServerless = process.env.VERCEL || process.env.NETLIFY;
 
-if (!isServerless) {
-  app.use(helmet());
-  app.use(compression());
+if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
+  console.error('Missing required environment variables: MONGO_URI and JWT_SECRET must be set');
+  if (!isServerless) process.exit(1);
 }
 
 if (!isServerless) {
+  app.use(helmet());
+  app.use(compression());
   app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 }
 
@@ -36,32 +33,10 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 
-let dbConnected = false;
-const connectDB = async () => {
-  if (dbConnected) return;
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000,
-      connectTimeoutMS: 10000
-    });
-    dbConnected = true;
-    if (!isServerless) console.log('MongoDB connected successfully');
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    throw err;
-  }
-};
-
-app.use(async (req, res, next) => {
-  if (!dbConnected) {
-    try {
-      await connectDB();
-    } catch {
-      return res.status(503).json({ success: false, error: 'Database connection unavailable' });
-    }
-  }
-  next();
-});
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 10000,
+  connectTimeoutMS: 10000
+}).catch(err => console.error('MongoDB connection error:', err));
 
 app.use('/api', require('./routes/apiRoutes'));
 app.use('/api/users', require('./routes/authRoutes'));
