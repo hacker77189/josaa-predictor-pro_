@@ -112,7 +112,7 @@ josaa-predictor-pro/
 ## Clone the Repository
 
 ```bash
-git clone https://github.com/hacker77189/josaa-predictor-pro.git
+git clone https://github.com/hacker77189/josaa-predictor-pro_.git
 cd josaa-predictor-pro
 ```
 
@@ -144,6 +144,7 @@ Create a `.env` file inside the **server** directory (see `server/.env.example`)
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
+CORS_ORIGIN=http://localhost:5173,https://your-app.vercel.app
 ```
 
 Create a `.env` file inside the **client** directory (see `client/.env.example`).
@@ -222,25 +223,37 @@ npm run dev
 ### Backend
 
 * Express
-* MongoDB
-* Mongoose
-* JWT
-* bcryptjs
+* MongoDB / Mongoose
+* JWT / bcryptjs
+* Helmet (security headers)
+* Compression (gzip)
+* Morgan (logging)
 * csv-parser
 * dotenv
+* serverless-http
 
 ---
 
 # 🌐 Deployment
 
-The project is configured for deployment on **Vercel**:
+The project is configured for deployment on **Vercel**.
+
+### One-click Deploy (via Vercel Dashboard)
 
 1. Push the repository to GitHub
-2. Import the project in [Vercel](https://vercel.com)
-3. Set the following environment variables in the Vercel dashboard:
-   - `MONGO_URI` — your MongoDB connection string (e.g. MongoDB Atlas)
+2. Go to [vercel.com](https://vercel.com) → **Add New Project** → Import your GitHub repo
+3. Add these environment variables in the Vercel dashboard:
+   - `MONGO_URI` — your MongoDB Atlas connection string
    - `JWT_SECRET` — a secure random string
-4. Deploy — Vercel will build the client and deploy the API as a serverless function
+   - `CORS_ORIGIN` — your Vercel domain (e.g. `https://your-app.vercel.app`)
+4. Deploy
+
+### CLI Deploy
+
+```bash
+vercel login
+vercel --prod
+```
 
 The API serverless entry point is at `api/index.js`, using `serverless-http` to wrap the Express app.
 
