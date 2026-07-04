@@ -128,7 +128,7 @@ router.get('/predict', async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', detail: error.message });
   }
 });
 
@@ -145,7 +145,8 @@ router.get('/filters', async (req, res) => {
     
     res.json({ states, branches, colleges });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error(error);
+    res.status(500).json({ error: 'Server error', detail: error.message });
   }
 });
 
