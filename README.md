@@ -72,7 +72,6 @@ The application allows users to search colleges based on their **JEE rank, categ
 * bcryptjs
 * dotenv
 * csv-parser
-* serverless-http
 
 ---
 
@@ -81,27 +80,25 @@ The application allows users to search colleges based on their **JEE rank, categ
 ```text
 josaa-predictor-pro/
 │
-├── api/
-│   └── index.js              # Vercel serverless entry point
+├── public/
+├── src/                       # React client code
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   └── context/
 │
-├── client/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   └── context/
-│   └── package.json
-│
-├── server/
+├── server/                    # Express backend
 │   ├── controllers/
 │   ├── middleware/
 │   ├── models/
 │   ├── routes/
 │   ├── data/
-│   └── server.js
+│   └── index.js
 │
-├── vercel.json
+├── .env                       # Unified environment variables
+├── package.json               # All dependencies (single node_modules)
+├── vite.config.js
+├── index.html
 └── README.md
 ```
 
@@ -120,17 +117,7 @@ cd josaa-predictor-pro
 
 ## Install Dependencies
 
-### Backend
-
 ```bash
-cd server
-npm install
-```
-
-### Frontend
-
-```bash
-cd client
 npm install
 ```
 
@@ -138,18 +125,12 @@ npm install
 
 # ⚙ Environment Variables
 
-Create a `.env` file inside the **server** directory (see `server/.env.example`).
+Create a `.env` file in the project root (see `.env.example`).
 
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
-CORS_ORIGIN=http://localhost:5173,https://your-app.vercel.app
-```
-
-Create a `.env` file inside the **client** directory (see `client/.env.example`).
-
-```env
 VITE_API_URL=http://localhost:5000/api
 ```
 
@@ -160,22 +141,20 @@ VITE_API_URL=http://localhost:5000/api
 ### Seed the Database
 
 ```bash
-cd server
 npm run seed
 ```
 
-### Start Backend (development)
+### Run Both (development)
 
 ```bash
-cd server
 npm run dev
 ```
 
-### Start Frontend (development)
+Or individually:
 
 ```bash
-cd client
-npm run dev
+npm run dev:server
+npm run dev:client
 ```
 
 ---
@@ -230,32 +209,18 @@ npm run dev
 * Morgan (logging)
 * csv-parser
 * dotenv
-* serverless-http
 
 ---
 
 # 🌐 Deployment
 
-The project is configured for deployment on **Vercel**.
-
-### One-click Deploy (via Vercel Dashboard)
+Deploy to any Node.js hosting platform (Railway, Render, Fly.io, etc.).
 
 1. Push the repository to GitHub
-2. Go to [vercel.com](https://vercel.com) → **Add New Project** → Import your GitHub repo
-3. Add these environment variables in the Vercel dashboard:
+2. Set the following environment variables on your host:
    - `MONGO_URI` — your MongoDB Atlas connection string
    - `JWT_SECRET` — a secure random string
-   - `CORS_ORIGIN` — your Vercel domain (e.g. `https://your-app.vercel.app`)
-4. Deploy
-
-### CLI Deploy
-
-```bash
-vercel login
-vercel --prod
-```
-
-The API serverless entry point is at `api/index.js`, using `serverless-http` to wrap the Express app.
+3. Use `npm start` as the start command
 
 ---
 
