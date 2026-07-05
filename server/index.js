@@ -8,18 +8,24 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const errorHandler = require('./middleware/errorHandler');
 
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+const isServerless = process.env.VERCEL || process.env.NETLIFY;
+
+if (!isServerless) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
 
 const app = express();
 
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
   console.error('Missing required environment variables: MONGO_URI and JWT_SECRET must be set');
-  process.exit(1);
+  if (!isServerless) process.exit(1);
 }
 
-app.use(helmet());
-app.use(compression());
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+if (!isServerless) {
+  app.use(helmet());
+  app.use(compression());
+  app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+}
 
 app.use(cors());
 
