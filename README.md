@@ -1,5 +1,7 @@
 # 🎓 JoSAA Predictor Pro
 
+**Live:** https://josaa-predictor-pro.vercel.app
+
 A modern full-stack MERN application that helps JEE aspirants predict admission opportunities in **IITs, NITs, IIITs, and GFTIs** using previous years' JoSAA counselling data.
 
 The application allows users to search colleges based on their **JEE rank, category, quota, gender, institute type, and preferred branch**, while providing an intuitive interface for comparing institutes and saving favorites.
