@@ -1,12 +1,10 @@
 # Node modules
 node_modules/
-client/node_modules/
-server/node_modules/
 
 # Environment variables
-**/.env
-**/.env.*
-!**/.env.example
+.env
+.env.*
+!.env.example
 
 # Build artifacts
 dist/
@@ -20,4 +18,3 @@ client/dist/
 *.njsproj
 *.sln
 *.sw?
-.vercel

@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,21 +8,18 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const errorHandler = require('./middleware/errorHandler');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
-const isServerless = process.env.VERCEL || process.env.NETLIFY;
 
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
   console.error('Missing required environment variables: MONGO_URI and JWT_SECRET must be set');
-  if (!isServerless) process.exit(1);
+  process.exit(1);
 }
 
-if (!isServerless) {
-  app.use(helmet());
-  app.use(compression());
-  app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-}
+app.use(helmet());
+app.use(compression());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN
